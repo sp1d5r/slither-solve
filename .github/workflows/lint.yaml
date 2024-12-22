@@ -1,0 +1,67 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'shared/**'
+      - '.github/workflows/lint.yaml'
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint-frontend:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: pnpm/action-setup@v2
+      with:
+        version: 8
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'pnpm'
+    - name: Install dependencies
+      run: |
+        pnpm install
+    - name: Run frontend linter
+      run: pnpm run lint:frontend
+
+  lint-backend:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: pnpm/action-setup@v2
+      with:
+        version: 8
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'pnpm'
+    - name: Install dependencies
+      run: |
+        pnpm install
+    - name: Run backend linter
+      run: pnpm run lint:backend
+
+  lint-shared:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: pnpm/action-setup@v2
+      with:
+        version: 8
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'pnpm'
+    - name: Install dependencies
+      run: |
+        pnpm install
+    - name: Run shared linter
+      run: pnpm run lint:shared

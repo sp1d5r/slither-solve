@@ -1,0 +1,11 @@
+name: slither-and-solve
+runtime:
+  name: python
+  options:
+    toolchain: pip
+    virtualenv: venv
+description: backend for slither and solve
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: https://www.pulumi.com/ai/api/project/dc0832c1-9501-4b51-8e3b-4ef820ddc199.zip
