@@ -1,97 +1,9 @@
 import { Request, Response } from 'express';
-import {PythonShell} from 'python-shell';
+import { ChallengeService } from '../services/challengeService';
+import { CodeExecutionService } from '../services/codeExecutionService';
 
-// Types
-interface TestCase {
-  input: any[];
-  expected: number;
-}
-
-interface ChallengeDetails {
-  title: string;
-  difficulty: string;
-  description: string;
-  boilerplate: string;
-  examples: Array<{
-    input: string;
-    output: string;
-  }>;
-  hints: string[];
-}
-
-// Test cases - in production this would come from a database
-const testCases: Record<string, TestCase[]> = {
-  'calculate_sum': [
-    { input: [1, 2, 3, 4, 5], expected: 15 },
-    { input: [-1, 0, 1], expected: 0 },
-    { input: [10], expected: 10 },
-    { input: [], expected: 0 }
-  ]
-};
-
-// Challenge details - in production this would come from a database
-const challengeDetails: Record<string, ChallengeDetails> = {
-  'calculate_sum': {
-    title: "Sum of Numbers",
-    difficulty: "Easy",
-    description: "Write a function that takes a list of numbers and returns their sum.",
-    boilerplate: `def calculate_sum(numbers):
-    # Your code here
-    pass`,
-    examples: [
-      {
-        input: "[1, 2, 3, 4, 5]",
-        output: "15"
-      },
-      {
-        input: "[-1, 0, 1]",
-        output: "0"
-      }
-    ],
-    hints: [
-      "Remember to initialize a variable to store the sum",
-      "You can use a for loop or Python's built-in sum() function"
-    ]
-  }
-};
-
-// Helper function to run Python tests
-const runPythonTests = async (code: string, testCase: TestCase): Promise<{
-  passed: boolean;
-  output?: string;
-  expected?: number;
-  error?: string;
-}> => {
-  try {
-    const fullCode = `
-${code}
-
-# Test execution
-result = calculate_sum(${JSON.stringify(testCase.input)})
-print(result)
-`;
-
-    const options = {
-      mode: 'text' as const,
-      pythonPath: 'python3',
-      pythonOptions: ['-u'], // unbuffered output
-    };
-
-    const results = await PythonShell.runString(fullCode, options);
-    const output = results[results.length - 1];
-    
-    return {
-      passed: Number(output) === testCase.expected,
-      output,
-      expected: testCase.expected
-    };
-  } catch (err) {
-    return {
-      passed: false,
-      error: err instanceof Error ? err.message : 'Unknown error occurred'
-    };
-  }
-};
+const challengeService = new ChallengeService();
+const codeExecutionService = new CodeExecutionService();
 
 export const executePythonCode = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -103,17 +15,22 @@ export const executePythonCode = async (req: Request, res: Response): Promise<vo
       return;
     }
 
+    // Validate code safety
+    const isValid = await codeExecutionService.validateCode(code);
+    if (!isValid) {
+      res.status(400).json({ error: 'Invalid code submitted' });
+      return;
+    }
+
     // Get test cases for this challenge
-    const challenges = testCases[challengeId];
-    if (!challenges) {
+    const testCases = await challengeService.getTestCases(challengeId);
+    if (testCases.length === 0) {
       res.status(404).json({ error: 'Challenge not found' });
       return;
     }
 
     // Run all test cases
-    const results = await Promise.all(
-      challenges.map(testCase => runPythonTests(code, testCase))
-    );
+    const results = await codeExecutionService.runTests(code, testCases);
 
     // Calculate overall results
     const totalTests = results.length;
@@ -141,8 +58,8 @@ export const executePythonCode = async (req: Request, res: Response): Promise<vo
 export const getChallengeById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
+    const challenge = await challengeService.getChallenge(id);
     
-    const challenge = challengeDetails[id];
     if (!challenge) {
       res.status(404).json({ error: 'Challenge not found' });
       return;

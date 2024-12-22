@@ -3,6 +3,7 @@ import { Button } from '../components/shadcn/button';
 import { Alert, AlertDescription } from '../components/shadcn/alert';
 import React, { useState, useEffect } from 'react';
 import { CheckCircle2, XCircle, AlertCircle, Loader2 } from 'lucide-react';
+import Editor, {loader} from "@monaco-editor/react";
 
 interface TestResult {
   passed: boolean;
@@ -23,6 +24,27 @@ interface Challenge {
   hints: string[];
 }
 
+const pastelTheme = {
+  base: 'vs-dark' as const,
+  inherit: true,
+  rules: [
+    { token: 'comment', foreground: '#a6c0a6', fontStyle: 'italic' },
+    { token: 'keyword', foreground: '#f0a8c0' },  // pastel pink
+    { token: 'string', foreground: '#b4e8b4' },   // pastel green
+    { token: 'number', foreground: '#c2d8f0' },   // pastel blue
+    { token: 'function', foreground: '#f0cfa8' }, // pastel orange
+  ],
+  colors: {
+    'editor.background': '#2a2a2a',               // darker background for contrast
+    'editor.foreground': '#e8e8e8',              // light text
+    'editor.lineHighlightBackground': '#3a3a3a',  // slightly lighter than background
+    'editor.selectionBackground': '#4a4a4a',
+    'editorCursor.foreground': '#f0a8c0',        // pastel pink cursor
+    'editorLineNumber.foreground': '#888888',
+    'editorLineNumber.activeForeground': '#f0a8c0',
+  }
+};
+
 const CodeChallenge = () => {
   const [code, setCode] = useState('');
   const [attempts, setAttempts] = useState(0);
@@ -32,12 +54,13 @@ const CodeChallenge = () => {
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [isLoadingChallenge, setIsLoadingChallenge] = useState(true);
+  const [isEditorReady, setIsEditorReady] = useState(false);
 
   // Fetch challenge details
   useEffect(() => {
     const fetchChallenge = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/code/challenge/calculate_sum');
+        const response = await fetch('http://localhost:3001/api/code/challenges/calculate_sum');
         if (!response.ok) throw new Error('Failed to fetch challenge');
         const data = await response.json();
         setChallenge(data);
@@ -51,6 +74,12 @@ const CodeChallenge = () => {
     };
 
     fetchChallenge();
+  }, []);
+
+  useEffect(() => {
+    loader.init().then(monaco => {
+      monaco.editor.defineTheme('pastelTheme', pastelTheme);
+    });
   }, []);
 
   const handleSubmit = async () => {
@@ -163,12 +192,37 @@ const CodeChallenge = () => {
             {/* Code Editor */}
             <div>
               <h3 className="text-lg font-semibold mb-2">Your Solution</h3>
-              <div className="bg-gray-900 p-4 rounded-lg">
-                <textarea
+              <div className="rounded-lg overflow-hidden border border-gray-700">
+                <Editor
+                  height="400px"
+                  defaultLanguage="python"
+                  theme="pastelTheme"
                   value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className="w-full h-64 bg-transparent text-gray-100 font-mono resize-none focus:outline-none"
-                  placeholder="Write your Python code here..."
+                  onChange={(value) => setCode(value || '')}
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    tabSize: 4,
+                    scrollBeyondLastLine: false,
+                    automaticLayout: true,
+                    lineNumbers: "on",
+                    showUnused: true,
+                    folding: true,
+                    dragAndDrop: true,
+                    formatOnPaste: true,
+                    formatOnType: true,
+                    padding: { top: 16, bottom: 16 },
+                    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                    renderLineHighlight: 'all',
+                    cursorBlinking: 'smooth',
+                    cursorSmoothCaretAnimation: 'on',
+                  }}
+                  onMount={() => setIsEditorReady(true)}
+                  loading={
+                    <div className="h-[400px] bg-gray-900 flex items-center justify-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                    </div>
+                  }
                 />
               </div>
             </div>

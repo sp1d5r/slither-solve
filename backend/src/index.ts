@@ -19,6 +19,8 @@ import serverless from 'serverless-http';
 import articleRoutes from './router/articleRoutes';
 import paymentRoutes from './router/paymentRoutes';
 import codeRoutes from './router/codeRoutes';
+import challengeRoutes from './router/challengeRoutes';
+import sessionRoutes from './router/sessionRoutes';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -55,6 +57,8 @@ app.use((req, res, next) => {
 app.use('/api/articles', articleRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/code', codeRoutes);
+app.use('/api/challenges', challengeRoutes);
+app.use('/api/sessions', sessionRoutes);
 
 app.listen(port, () => {
   console.log(`Backend server running at http://localhost:${port}`);

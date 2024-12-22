@@ -11,7 +11,7 @@ on:
 
 env:
   AWS_REGION: eu-west-1
-  ECR_REPOSITORY: monorepo-example
+  ECR_REPOSITORY: slither-and-solve
 
 jobs:
   check_changes:
@@ -90,7 +90,7 @@ jobs:
         uses: pulumi/actions@v6
         with:
           command: up
-          stack-name: monorepo
+          stack-name: slither-and-solve
           work-dir: ./infra
           create-stack: true  # Creates the stack if it doesn't exist
           refresh: true 
