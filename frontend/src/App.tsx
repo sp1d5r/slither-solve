@@ -55,7 +55,7 @@ function App() {
                   <Route path="/code" element={<CodePage />} />
 
                   {/* Session Manager */}
-                  <Route path="/session-manager" element={<SessionManager />} />
+                  <Route path="/session" element={<SessionManager />} />
                   
                   {/* Test Page */}
                   <Route path="/test" element={<Test />} />

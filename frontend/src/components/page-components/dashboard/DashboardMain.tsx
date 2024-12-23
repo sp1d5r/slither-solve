@@ -1,12 +1,19 @@
 import React from 'react';
 import { Trophy, Star, BoltIcon, Book, Code, Database, Terminal } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const DashboardMain= () => {
+  const navigate = useNavigate();
+
   const topics = [
-    { id: 1, name: 'Variables', progress: 75, icon: <Database className="w-6 h-6" />, cards: 20 },
-    { id: 2, name: 'If-Else', progress: 45, icon: <Code className="w-6 h-6" />, cards: 15 },
-    { id: 3, name: 'Functions', progress: 30, icon: <Terminal className="w-6 h-6" />, cards: 25 },
+    { id: 'variables', name: 'Variables', progress: 75, icon: <Database className="w-6 h-6" />, cards: 20 },
+    { id: 'if_statements', name: 'If-Else', progress: 45, icon: <Code className="w-6 h-6" />, cards: 15 },
+    { id: 'functions', name: 'Functions', progress: 30, icon: <Terminal className="w-6 h-6" />, cards: 25 },
   ];
+
+  const startSession = (topicId: string) => {
+    navigate('/session', { state: { selectedTopic: topicId } });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-pink-50">
@@ -55,7 +62,11 @@ const DashboardMain= () => {
         {/* Topics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {topics.map((topic) => (
-            <div key={topic.id} className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+            <div 
+              key={topic.id} 
+              className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+              onClick={() => startSession(topic.id)}
+            >
               <div className="flex items-center justify-between mb-4">
                 <div className="bg-gradient-to-r from-green-100 to-pink-100 p-3 rounded-lg">
                   {topic.icon}

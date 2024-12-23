@@ -39,9 +39,9 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, isLoading }) =>
     }, []);
   
     return (
-      <div className="rounded-lg overflow-hidden border border-gray-700">
+      <div className="rounded-lg overflow-hidden border border-gray-700 h-full min-h-[300px]">
         <Editor
-          height="400px"
+          height="100%"
           defaultLanguage="python"
           theme="pastelTheme"
           value={code}
@@ -66,7 +66,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, isLoading }) =>
           }}
           onMount={() => setIsEditorReady(true)}
           loading={
-            <div className="h-[400px] bg-gray-900 flex items-center justify-center">
+            <div className="h-full min-h-[300px] bg-gray-900 flex items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
             </div>
           }

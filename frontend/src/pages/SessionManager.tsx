@@ -4,6 +4,7 @@ import { Button } from '../components/shadcn/button';
 import { Loader2 } from 'lucide-react';
 import { CodeChallenge } from '../components/page-components/code-components/CodeChallenge';
 import { Challenge } from 'shared';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 // Types for our session management
 interface TopicOption {
@@ -67,6 +68,9 @@ const MOCK_TOPICS: TopicOption[] = [
 ];
 
 const SessionManager = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  
   // Session states
   const [sessionStage, setSessionStage] = useState<'config' | 'active' | 'summary'>('config');
   const [sessionConfig, setSessionConfig] = useState<SessionConfig>({
@@ -86,6 +90,18 @@ const SessionManager = () => {
     challenges: [],
     currentIndex: 0
   });
+
+  // Auto-select topic if coming from dashboard
+  useEffect(() => {
+    const selectedTopic = location.state?.selectedTopic;
+    if (selectedTopic) {
+      setSessionConfig(prev => ({
+        ...prev,
+        topic: selectedTopic
+      }));
+      startSession(); // Automatically start the session
+    }
+  }, []);
 
   // Timer for session duration
   useEffect(() => {
@@ -198,14 +214,14 @@ const SessionManager = () => {
               key={topic.id}
               className={`p-4 cursor-pointer transition-colors ${
                 sessionConfig.topic === topic.id
-                  ? 'border-blue-500 bg-blue-50'
+                  ? 'border-green-500 bg-green-50'
                   : 'hover:bg-gray-50'
               }`}
               onClick={() => handleTopicSelect(topic.id)}
             >
               <h3 className="font-medium">{topic.name}</h3>
               <p className="text-sm text-gray-600 mt-1">{topic.description}</p>
-              <span className="text-xs text-blue-600 mt-2 inline-block">
+              <span className="text-xs text-green-600 mt-2 inline-block">
                 {topic.difficulty}
               </span>
             </Card>
@@ -239,6 +255,7 @@ const SessionManager = () => {
               {['Easy', 'Medium', 'Hard'].map((diff) => (
                 <Button
                   key={diff}
+                  className={`${sessionConfig.difficulty === diff ? 'bg-green-400 hover:bg-pink-400' : 'bg-gray-100'}`}
                   variant={sessionConfig.difficulty === diff ? 'default' : 'outline'}
                   onClick={() => handleDifficultyChange(diff as 'Easy' | 'Medium' | 'Hard')}
                 >
@@ -251,7 +268,7 @@ const SessionManager = () => {
       </div>
 
       <Button
-        className="w-full"
+        className="w-full bg-pink-400 hover:bg-green-400"
         disabled={!sessionConfig.topic || loading}
         onClick={startSession}
       >
@@ -268,45 +285,35 @@ const SessionManager = () => {
   );
 
   const renderActiveStage = () => (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
-        <div className="flex gap-4">
-          <div className="text-sm font-medium">
-            Question {sessionProgress.currentQuestion} of {sessionProgress.totalQuestions}
+    <div className="h-[90vh] min-w-screen flex flex-col">
+      <div className="rounded-xl p-4 border border-green-400">
+        <div className="container mx-auto flex justify-evenly items-center gap-2">
+          <div className="flex gap-4">
+            <div className="text-sm font-medium">
+              Question {sessionProgress.currentQuestion} of {sessionProgress.totalQuestions}
+            </div>
           </div>
           <div className="text-sm font-medium">
-            Score: {sessionProgress.score}
+              Score: {sessionProgress.score}
+            </div>
+          <div className="text-sm font-medium">
+            Time: {Math.floor(sessionProgress.timeSpent / 60)}:
+            {String(sessionProgress.timeSpent % 60).padStart(2, '0')}
           </div>
-        </div>
-        <div className="text-sm font-medium">
-          Time: {Math.floor(sessionProgress.timeSpent / 60)}:
-          {String(sessionProgress.timeSpent % 60).padStart(2, '0')}
         </div>
       </div>
 
-      <CodeChallenge 
-        challenge={sessionChallenges.challenges[sessionChallenges.currentIndex]}
-        onComplete={(result) => {
-          handleQuestionComplete(result);
-          // Update current challenge index
-          setSessionChallenges(prev => ({
-            ...prev,
-            currentIndex: prev.currentIndex + 1
-          }));
-        }}
-      />
-
-      <div className="flex justify-end">
-        <Button 
-          variant="ghost"
-          onClick={() => handleQuestionComplete({
-            status: 'skipped',
-            attempts: 0,
-            timeSpent: sessionProgress.timeSpent
-          })}
-        >
-          Skip Question
-        </Button>
+      <div className="flex-1">
+        <CodeChallenge 
+          challenge={sessionChallenges.challenges[sessionChallenges.currentIndex]}
+          onComplete={(result) => {
+            handleQuestionComplete(result);
+            setSessionChallenges(prev => ({
+              ...prev,
+              currentIndex: prev.currentIndex + 1
+            }));
+          }}
+        />
       </div>
     </div>
   );
@@ -317,11 +324,11 @@ const SessionManager = () => {
       <div className="grid grid-cols-2 gap-4">
         <Card className="p-4">
           <h3 className="font-medium">Final Score</h3>
-          <p className="text-2xl font-bold text-blue-600">{sessionProgress.score}</p>
+          <p className="text-2xl font-bold text-green-600">{sessionProgress.score}</p>
         </Card>
         <Card className="p-4">
           <h3 className="font-medium">Time Spent</h3>
-          <p className="text-2xl font-bold text-blue-600">
+          <p className="text-2xl font-bold text-green-600">
             {Math.floor(sessionProgress.timeSpent / 60)}m {sessionProgress.timeSpent % 60}s
           </p>
         </Card>
@@ -368,7 +375,7 @@ const SessionManager = () => {
           New Session
         </Button>
         <Button
-          className="flex-1"
+          className="flex-1 bg-green-400"
           onClick={() => {
             // This would start practice mode with failed questions
             console.log('Start practice mode');
@@ -381,7 +388,7 @@ const SessionManager = () => {
   );
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="mx-auto p-4">
       <Card className="p-6">
         {sessionStage === 'config' && renderConfigStage()}
         {sessionStage === 'active' && renderActiveStage()}

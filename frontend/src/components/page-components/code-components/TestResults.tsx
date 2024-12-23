@@ -10,7 +10,7 @@ const TestResults: React.FC<TestResultsProps> = ({ results }) => {
     if (results.length === 0) return null;
 
     return (
-        <div className="space-y-2">
+        <div className="space-y-2 h-[10vh] flex-1 overflow-y-scroll">
         <h4 className="font-medium">Test Results:</h4>
         {results.map((result, idx) => (
             <div 

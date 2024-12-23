@@ -6,16 +6,54 @@ import { ChallengeDescription } from './ChallengeDescription';
 import { TestResults } from './TestResults';
 import { HintsSection } from './HintSection';
 import { CodeEditor } from './CodeEditor';
-import { Card, CardContent, CardHeader, CardTitle } from '../../shadcn/card';
 import { Alert, AlertDescription } from '../../shadcn/alert';
 import { getStatusColor } from './utils';
 import { Button } from '../../shadcn/button';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface CodeChallengeProps {
     onComplete?: (result: { status: 'success' | 'warning' | 'error' | 'skipped'; attempts: number; timeSpent: number }) => void;
     challenge: Challenge;
 }
   
+const getResultContent = (attempts: number, isSuccess: boolean) => {
+  if (isSuccess) {
+    if (attempts === 1) {
+      return {
+        bgColor: 'bg-gradient-to-r from-green-400 to-emerald-500',
+        textColor: 'text-white',
+        emoji: '🏆',
+        title: 'Perfect First Try!',
+        message: 'Absolutely brilliant! You nailed it!'
+      };
+    } else if (attempts === 2) {
+      return {
+        bgColor: 'bg-gradient-to-r from-yellow-400 to-amber-500',
+        textColor: 'text-white',
+        emoji: '⭐',
+        title: 'Well Done!',
+        message: 'You got it on your second try!'
+      };
+    } else {
+      return {
+        bgColor: 'bg-gradient-to-r from-orange-400 to-red-500',
+        textColor: 'text-white',
+        emoji: '✨',
+        title: 'Finally There!',
+        message: 'Keep practicing to improve!'
+      };
+    }
+  } else {
+    return {
+      bgColor: 'bg-gradient-to-r from-red-500 to-purple-500',
+      textColor: 'text-white',
+      emoji: '😅',
+      title: 'Time to Move On',
+      message: 'Don\'t worry! Learning from mistakes is part of the journey.'
+    };
+  }
+};
+
 const CodeChallenge: React.FC<CodeChallengeProps> = ({ onComplete, challenge }) => {
     const [code, setCode] = useState(challenge.boilerplate);
     const [attempts, setAttempts] = useState(0);
@@ -24,6 +62,8 @@ const CodeChallenge: React.FC<CodeChallengeProps> = ({ onComplete, challenge }) 
     const [loading, setLoading] = useState(false);
     const [testResults, setTestResults] = useState<TestResult[]>([]);
     const startTime = useRef(Date.now());
+    const [showResult, setShowResult] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
     
     useEffect(() => {
         setCode(challenge.boilerplate);
@@ -65,19 +105,35 @@ const CodeChallenge: React.FC<CodeChallengeProps> = ({ onComplete, challenge }) 
         setStatus(newStatus);
         
         if (data.allPassed) {
+          setIsSuccess(true);
+          setShowResult(true);
           setFeedback(attempts === 0 ? 'Perfect! First try!' : 'Correct, but took multiple attempts');
-          onComplete?.({
-            status: newStatus as 'success' | 'warning',
-            attempts: attempts + 1,
-            timeSpent: Math.floor((Date.now() - startTime.current) / 1000)
-          });
+          
+          setTimeout(() => {
+            setShowResult(false);
+            setTimeout(() => {
+              onComplete?.({
+                status: newStatus as 'success' | 'warning',
+                attempts: attempts + 1,
+                timeSpent: Math.floor((Date.now() - startTime.current) / 1000)
+              });
+            }, 300);
+          }, 1500);
         } else if (attempts >= 2) {
+          setIsSuccess(false);
+          setShowResult(true);
           setFeedback('Maximum attempts reached. Try a different challenge.');
-          onComplete?.({
-            status: 'error',
-            attempts: attempts + 1,
-            timeSpent: Math.floor((Date.now() - startTime.current) / 1000)
-          });
+          
+          setTimeout(() => {
+            setShowResult(false);
+            setTimeout(() => {
+              onComplete?.({
+                status: 'error',
+                attempts: attempts + 1,
+                timeSpent: Math.floor((Date.now() - startTime.current) / 1000)
+              });
+            }, 300);
+          }, 1500);
         } else {
           setFeedback(`Some tests failed. ${3 - attempts - 1} attempts remaining.`);
         }
@@ -91,67 +147,136 @@ const CodeChallenge: React.FC<CodeChallengeProps> = ({ onComplete, challenge }) 
     };
   
     return (
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>{challenge.title}</CardTitle>
-            <span className="px-2 py-1 text-sm rounded bg-blue-100 text-blue-800">
+      <div className="flex flex-col lg:flex-row h-full">
+        {/* Left Panel - Question Description */}
+        <div className="w-full lg:w-2/5 p-4 lg:p-6 border-b lg:border-b-0 lg:border-r overflow-y-auto">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-xl lg:text-2xl font-bold">{challenge.title}</h1>
+            <span className="px-2 py-1 text-sm rounded bg-green-100 text-green-800">
               {challenge.difficulty}
             </span>
           </div>
-        </CardHeader>
-        {challenge && <CardContent>
-          <div className="space-y-6">
-            <ChallengeDescription challenge={challenge} />
-            
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Your Solution</h3>
-              <CodeEditor 
-                code={code}
-                onChange={setCode}
-                isLoading={loading}
-              />
-            </div>
-  
-            <TestResults results={testResults} />
-  
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <Button 
-                  onClick={handleSubmit}
-                  disabled={loading || status === 'error'}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Running Tests...
-                    </>
-                  ) : (
-                    'Submit Solution'
-                  )}
-                </Button>
-                <span className="text-sm text-gray-500">
-                  Attempts: {attempts}/3
-                </span>
-              </div>
-  
-              {feedback && (
-                <Alert 
-                  className={`${getStatusColor(status)} flex items-center gap-2`}
-                >
-                  {getStatusIcon(status)}
-                  <AlertDescription>{feedback}</AlertDescription>
-                </Alert>
-              )}
-  
-              <HintsSection 
-                hints={challenge.hints}
-                show={attempts > 0 && status !== 'success'}
-              />
-            </div>
+          <ChallengeDescription challenge={challenge} />
+          <HintsSection 
+            hints={challenge.hints}
+            show={attempts > 0 && status !== 'success'}
+          />
+        </div>
+
+        {/* Right Panel - IDE and Results */}
+        <div className="w-full lg:w-3/5 p-4 lg:p-6 flex flex-col">
+          <div className="flex-1">
+            <CodeEditor 
+              code={code}
+              onChange={(code) => setCode(code)}
+              isLoading={loading}
+            />
           </div>
-        </CardContent>}
-      </Card>
+
+          <div className="mt-6 space-y-4 min-h-[20vh]">
+            <div className="flex justify-between items-center">
+              <Button 
+                onClick={handleSubmit}
+                className="bg-green-400 hover:bg-pink-400"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Running Tests...
+                  </>
+                ) : (
+                  'Submit Solution'
+                )}
+              </Button>
+              <span className="text-sm text-gray-500">
+                Attempts: {attempts}/3
+              </span>
+            </div>
+
+            {feedback && (
+              <Alert className={`${getStatusColor(status)} flex items-center gap-2`}>
+                {getStatusIcon(status)}
+                <AlertDescription>{feedback}</AlertDescription>
+              </Alert>
+            )}
+
+            <TestResults results={testResults} />
+          </div>
+        </div>
+
+        {/* Success/Failure Animation Overlay */}
+        <AnimatePresence mode="wait">
+          {showResult && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 flex items-center justify-center z-50"
+            >
+              <motion.div
+                className={`${getResultContent(attempts, isSuccess).bgColor} p-8 rounded-2xl shadow-xl text-center max-w-md mx-4`}
+                initial={{ y: 100, scale: 0.8, opacity: 0 }}
+                animate={{ 
+                  y: 0, 
+                  scale: 1, 
+                  opacity: 1,
+                  transition: {
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 20
+                  }
+                }}
+                exit={{ y: 100, scale: 0.8, opacity: 0 }}
+              >
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ 
+                    scale: [0, 1.2, 1],
+                    rotate: [0, 14, -8, 0]
+                  }}
+                  transition={{ 
+                    duration: 0.6,
+                    times: [0, 0.6, 0.8, 1],
+                    type: "spring"
+                  }}
+                  className="text-6xl mb-4"
+                >
+                  {getResultContent(attempts, isSuccess).emoji}
+                </motion.div>
+                
+                <motion.h2 
+                  className={`text-2xl font-bold mb-2 ${getResultContent(attempts, isSuccess).textColor}`}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  {getResultContent(attempts, isSuccess).title}
+                </motion.h2>
+                
+                <motion.p
+                  className={`${getResultContent(attempts, isSuccess).textColor} opacity-90`}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  {getResultContent(attempts, isSuccess).message}
+                </motion.p>
+
+                <motion.p
+                  className={`${getResultContent(attempts, isSuccess).textColor} text-sm mt-4 opacity-75`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  Moving to next challenge...
+                </motion.p>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     );
   };
 
