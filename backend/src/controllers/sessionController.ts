@@ -10,6 +10,12 @@ const sessionService = new SessionService(challengeService);
 export const createSession = async (req: Request, res: Response): Promise<void> => {
   try {
     const sessionConfig: SessionConfig = req.body;
+    const userId = req.user?.uid; // Will come from auth middleware
+    
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
 
     // Validate session config
     if (!sessionConfig.topic || !sessionConfig.difficulty || !sessionConfig.questionCount) {
@@ -17,7 +23,7 @@ export const createSession = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const session = await sessionService.createSession(sessionConfig);
+    const session = await sessionService.createSession(sessionConfig, userId);
     res.json(session);
   } catch (error) {
     console.error('Error creating session:', error);
@@ -78,6 +84,12 @@ export const completeQuestion = async (req: Request, res: Response): Promise<voi
   try {
     const { sessionId, questionId } = req.params;
     const result: QuestionResult = req.body;
+    const userId = req.user?.uid; // Will come from auth middleware
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
 
     // Validate result
     if (!result.status || typeof result.attempts !== 'number' || typeof result.timeSpent !== 'number') {
@@ -88,7 +100,8 @@ export const completeQuestion = async (req: Request, res: Response): Promise<voi
     const updatedSession = await sessionService.completeQuestion(
       sessionId,
       questionId,
-      result
+      result,
+      userId
     );
 
     if (!updatedSession) {
@@ -112,10 +125,91 @@ export const completeQuestion = async (req: Request, res: Response): Promise<voi
 
 export const getSessionHistory = async (req: Request, res: Response): Promise<void> => {
   try {
-    const sessions = await sessionService.getSessionHistory();
+    const userId = req.user?.uid; // Will come from auth middleware
+    const { page = 1, limit = 10 } = req.query;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const sessions = await sessionService.getSessionHistory(
+      userId,
+      Number(page),
+      Number(limit)
+    );
+
     res.json(sessions);
   } catch (error) {
     console.error('Error fetching session history:', error);
+    res.status(500).json({ 
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    });
+  }
+};
+
+export const getTopicProgress = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.uid; // Will come from auth middleware
+    const { topic } = req.params;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    if (!topic) {
+      res.status(400).json({ error: 'Topic is required' });
+      return;
+    }
+
+    const progress = await sessionService.getTopicProgress(userId, topic);
+    
+    if (!progress) {
+      res.status(404).json({ error: 'No progress found for this topic' });
+      return;
+    }
+
+    res.json(progress);
+  } catch (error) {
+    console.error('Error fetching topic progress:', error);
+    res.status(500).json({ 
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    });
+  }
+};
+
+export const getProblemHistory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.uid; // Will come from auth middleware
+    const { problemId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    if (!problemId) {
+      res.status(400).json({ error: 'Problem ID is required' });
+      return;
+    }
+
+    const history = await sessionService.getProblemHistory(
+      userId,
+      problemId,
+      Number(page),
+      Number(limit)
+    );
+
+    if (!history) {
+      res.status(404).json({ error: 'No history found for this problem' });
+      return;
+    }
+
+    res.json(history);
+  } catch (error) {
+    console.error('Error fetching problem history:', error);
     res.status(500).json({ 
       error: error instanceof Error ? error.message : 'Unknown error occurred'
     });

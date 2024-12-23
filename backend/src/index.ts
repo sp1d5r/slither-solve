@@ -21,6 +21,7 @@ import paymentRoutes from './router/paymentRoutes';
 import codeRoutes from './router/codeRoutes';
 import challengeRoutes from './router/challengeRoutes';
 import sessionRoutes from './router/sessionRoutes';
+import adminRoutes from './router/adminRoutes';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -59,6 +60,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/code', codeRoutes);
 app.use('/api/challenges', challengeRoutes);
 app.use('/api/sessions', sessionRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.listen(port, () => {
   console.log(`Backend server running at http://localhost:${port}`);

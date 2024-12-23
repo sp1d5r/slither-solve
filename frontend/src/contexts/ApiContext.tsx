@@ -20,7 +20,13 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (authState.user) {
       const token = await FirebaseAuthService.getToken();
+      console.log('Token:', token);
+      if (!token) {
+        throw new Error('No auth token available');
+      }
       headers.set('Authorization', `Bearer ${token}`);
+    } else {
+      console.log('No user in authState:', authState);
     }
 
     const response = await fetch(`${apiUrl}/${endpoint}`, {
@@ -30,7 +36,8 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
 
     if (!response.ok) {
-      throw new Error(`API Error: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`API Error: ${errorData.error || response.statusText}`);
     }
 
     return response;

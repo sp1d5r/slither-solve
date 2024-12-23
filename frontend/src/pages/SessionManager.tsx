@@ -3,39 +3,20 @@ import { Card } from '../components/shadcn/card';
 import { Button } from '../components/shadcn/button';
 import { Loader2 } from 'lucide-react';
 import { CodeChallenge } from '../components/page-components/code-components/CodeChallenge';
-import { Challenge } from 'shared';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { 
+  TopicOption, 
+  SessionConfig, 
+  SessionProgress, 
+  Session, 
+  QuestionResult,
+} from 'shared';
+import { useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthenticationProvider';
+import { useApi } from '../contexts/ApiContext';
 
-// Types for our session management
-interface TopicOption {
-  id: string;
-  name: string;
-  description: string;
-  difficulty: 'Easy' | 'Medium' | 'Hard';
-}
-
-interface SessionConfig {
-  topic: string;
-  questionCount: number;
-  difficulty: 'Easy' | 'Medium' | 'Hard';
-}
-
-interface SessionProgress {
-  currentQuestion: number;
-  totalQuestions: number;
-  score: number;
-  timeSpent: number;
-  questionResults: Array<{
-    questionId: string;
-    status: 'success' | 'warning' | 'error' | 'skipped';
-    attempts: number;
-    timeSpent: number;
-  }>;
-}
-
-// Add new interface for session challenges
-interface SessionChallenges {
-  challenges: Challenge[];
+// Local state management
+interface SessionState {
+  session: Session | null;
   currentIndex: number;
 }
 
@@ -69,8 +50,9 @@ const MOCK_TOPICS: TopicOption[] = [
 
 const SessionManager = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  
+  const { authState } = useAuth();
+  const { fetchWithAuth } = useApi();
+
   // Session states
   const [sessionStage, setSessionStage] = useState<'config' | 'active' | 'summary'>('config');
   const [sessionConfig, setSessionConfig] = useState<SessionConfig>({
@@ -83,11 +65,13 @@ const SessionManager = () => {
     totalQuestions: 0,
     score: 0,
     timeSpent: 0,
-    questionResults: []
+    questionResults: [],
+    topic: '',
+    masteryProgress: 0
   });
   const [loading, setLoading] = useState(false);
-  const [sessionChallenges, setSessionChallenges] = useState<SessionChallenges>({
-    challenges: [],
+  const [sessionState, setSessionState] = useState<SessionState>({
+    session: null,
     currentIndex: 0
   });
 
@@ -141,17 +125,35 @@ const SessionManager = () => {
   const startSession = async () => {
     setLoading(true);
     try {
-      // Fetch all challenges for the session
-      const response = await fetch(`http://localhost:3001/api/challenges/topic/${sessionConfig.topic.toLowerCase()}`, {
-        method: 'GET',
+      // Debug: Log the config being sent
+      console.log('Sending session config:', sessionConfig);
 
+      // Validate config before sending
+      if (!sessionConfig.topic) {
+        console.error('Missing topic in config');
+        return;
+      }
+      if (!sessionConfig.difficulty) {
+        console.error('Missing difficulty in config');
+        return;
+      }
+      if (!sessionConfig.questionCount) {
+        console.error('Missing questionCount in config');
+        return;
+      }
+
+      const response = await fetchWithAuth('api/sessions', {
+        method: 'POST',
+        body: JSON.stringify(sessionConfig)
       });
       
-      if (!response.ok) throw new Error('Failed to fetch session challenges');
-      const challenges = await response.json();
+      const sessionData: Session = await response.json();
       
-      setSessionChallenges({
-        challenges,
+      // Debug: Log the response
+      console.log('Session created:', sessionData);
+      
+      setSessionState({
+        session: sessionData,
         currentIndex: 0
       });
       
@@ -160,48 +162,74 @@ const SessionManager = () => {
         totalQuestions: sessionConfig.questionCount,
         score: 0,
         timeSpent: 0,
-        questionResults: []
+        questionResults: [],
+        topic: sessionConfig.topic,
+        masteryProgress: 0
       });
       setSessionStage('active');
     } catch (error) {
       console.error('Failed to start session:', error);
+      // Add more detailed error logging
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleQuestionComplete = (result: {
-    status: 'success' | 'warning' | 'error' | 'skipped';
-    attempts: number;
-    timeSpent: number;
-  }) => {
-    setSessionProgress(prev => {
-      const newResults = [...prev.questionResults, {
-        questionId: `q-${prev.questionResults.length + 1}`,
-        ...result
-      }];
-      
-      const newScore = newResults.reduce((score, result) => {
-        switch (result.status) {
-          case 'success': return score + 3;
-          case 'warning': return score + 1;
-          case 'skipped': return score - 1;
-          default: return score;
+  const handleQuestionComplete = async (result: QuestionResult) => {
+    if (!sessionState.session?.id) return;
+
+    try {
+      const response = await fetchWithAuth(
+        `api/sessions/${sessionState.session.id}/questions/${result.questionId}/complete`,
+        {
+          method: 'POST',
+          body: JSON.stringify(result)
         }
-      }, 0);
+      );
 
-      const isLastQuestion = prev.currentQuestion === prev.totalQuestions;
-      if (isLastQuestion) {
-        setSessionStage('summary');
-      }
+      if (!response.ok) throw new Error('Failed to submit question result');
+      const updatedSession: Session = await response.json();
 
-      return {
+      setSessionProgress(prev => {
+        const newResults = [...prev.questionResults, result];
+        const newScore = calculateScore(newResults);
+        const isLastQuestion = prev.currentQuestion === prev.totalQuestions;
+
+        if (isLastQuestion) {
+          setSessionStage('summary');
+        }
+
+        return {
+          ...prev,
+          currentQuestion: isLastQuestion ? prev.currentQuestion : prev.currentQuestion + 1,
+          score: newScore,
+          questionResults: newResults,
+        };
+      });
+
+      setSessionState(prev => ({
         ...prev,
-        currentQuestion: isLastQuestion ? prev.currentQuestion : prev.currentQuestion + 1,
-        score: newScore,
-        questionResults: newResults
-      };
-    });
+        session: updatedSession,
+        currentIndex: prev.currentIndex + 1
+      }));
+
+    } catch (error) {
+      console.error('Failed to submit question result:', error);
+    }
+  };
+
+  const calculateScore = (results: QuestionResult[]): number => {
+    return results.reduce((score, result) => {
+      switch (result.status) {
+        case 'success': return score + 3;
+        case 'warning': return score + 1;
+        case 'skipped': return score - 1;
+        default: return score;
+      }
+    }, 0);
   };
 
   const renderConfigStage = () => (
@@ -285,6 +313,7 @@ const SessionManager = () => {
   );
 
   const renderActiveStage = () => (
+    sessionState.session && (
     <div className="h-[90vh] min-w-screen flex flex-col">
       <div className="rounded-xl p-4 border border-green-400">
         <div className="container mx-auto flex justify-evenly items-center gap-2">
@@ -305,17 +334,12 @@ const SessionManager = () => {
 
       <div className="flex-1">
         <CodeChallenge 
-          challenge={sessionChallenges.challenges[sessionChallenges.currentIndex]}
-          onComplete={(result) => {
-            handleQuestionComplete(result);
-            setSessionChallenges(prev => ({
-              ...prev,
-              currentIndex: prev.currentIndex + 1
-            }));
-          }}
+          challenge={sessionState.session?.challenges[sessionState.currentIndex]}
+          onComplete={handleQuestionComplete}
         />
       </div>
     </div>
+    )
   );
 
   const renderSummaryStage = () => (
@@ -368,7 +392,18 @@ const SessionManager = () => {
               totalQuestions: 0,
               score: 0,
               timeSpent: 0,
-              questionResults: []
+              questionResults: [],
+              topic: '',
+              masteryProgress: 0
+            });
+            setSessionState({
+              session: null,
+              currentIndex: 0
+            });
+            setSessionConfig({
+              topic: '',
+              questionCount: 5,
+              difficulty: 'Easy'
             });
           }}
         >

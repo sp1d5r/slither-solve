@@ -1,3 +1,5 @@
+import { Identifiable } from "../services/database/DatabaseInterface";
+
 export type Difficulty = 'Easy' | 'Medium' | 'Hard';
 
 export interface Challenge {
@@ -33,14 +35,15 @@ export interface SessionConfig {
   questionCount: number;
 }
 
-export interface Session {
-  id: string;
+export interface Session extends Identifiable {
+  userId: string;
   config: SessionConfig;
-  challenges: string[];  // array of challenge IDs
+  challenges: Challenge[];
   currentQuestion: number;
   score: number;
-  startTime: Date;
+  startTime: string;
   status: 'active' | 'completed' | 'paused';
+  results: { [key: string]: QuestionResult };
 }
 
 export interface SessionProgress {
@@ -48,7 +51,9 @@ export interface SessionProgress {
   totalQuestions: number;
   score: number;
   timeSpent: number;
-  questionResults: Array<QuestionResult>;
+  questionResults: QuestionResult[];
+  topic: string;
+  masteryProgress: number;
 }
 
 export interface QuestionResult {
@@ -56,6 +61,8 @@ export interface QuestionResult {
   status: 'success' | 'warning' | 'error' | 'skipped';
   attempts: number;
   timeSpent: number;
+  code: string;
+  testResults?: TestResult[];
 }
 
 export interface ExecuteCodeResponse {
@@ -82,4 +89,63 @@ export interface TopicOption {
   name: string;
   description: string;
   difficulty: Difficulty;
+}
+
+export interface TopicProgress {
+  userId: string;
+  topic: string;
+  totalAttempts: number;
+  successfulAttempts: number;
+  lastAttempted: string;
+  averageTime: number;
+  masteryLevel: number;
+}
+
+export interface ProblemProgress {
+  userId: string;
+  problemId: string;
+  attempts: number;
+  lastAttempted: string;
+  mastered: boolean;
+  averageTime: number;
+  successRate: number;
+}
+
+export interface ProblemAttempt extends Identifiable {
+  userId: string;
+  problemId: string;
+  sessionId: string;
+  code: string;
+  timestamp: string;
+  timeSpent: number;
+  status: 'success' | 'error' | 'warning';
+  errorMessage?: string;
+}
+
+export interface SessionHistoryResponse {
+  sessions: Session[];
+  total: number;
+}
+
+export interface ProblemHistoryResponse {
+  attempts: ProblemAttempt[];
+  total: number;
+}
+
+export interface SessionAttempt {
+  challengeId: string;
+  topic: string;
+  correct: boolean;
+  attemptCount: number;
+  timestamp: string;
+  timeSpent: number;
+  code?: string;  // Optional: store the code they wrote
+}
+
+export interface SessionHistory extends Identifiable {
+  userId: string;
+  sessionId: string;
+  timestamp: string;
+  topicStudied: string;
+  problemsAttempted: SessionAttempt[];
 }

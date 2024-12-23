@@ -1,7 +1,7 @@
 import { getStatusIcon } from "./utils";
 import React, { useState, useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
-import { Challenge, TestResult } from 'shared';
+import { Challenge, QuestionResult, TestResult } from 'shared';
 import { ChallengeDescription } from './ChallengeDescription';
 import { TestResults } from './TestResults';
 import { HintsSection } from './HintSection';
@@ -12,8 +12,8 @@ import { Button } from '../../shadcn/button';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface CodeChallengeProps {
-    onComplete?: (result: { status: 'success' | 'warning' | 'error' | 'skipped'; attempts: number; timeSpent: number }) => void;
     challenge: Challenge;
+    onComplete?: (result: QuestionResult) => void;
 }
   
 const getResultContent = (attempts: number, isSuccess: boolean) => {
@@ -104,33 +104,24 @@ const CodeChallenge: React.FC<CodeChallengeProps> = ({ onComplete, challenge }) 
   
         setStatus(newStatus);
         
-        if (data.allPassed) {
-          setIsSuccess(true);
+        if (data.allPassed || attempts >= 2) {
+          setIsSuccess(data.allPassed);
           setShowResult(true);
-          setFeedback(attempts === 0 ? 'Perfect! First try!' : 'Correct, but took multiple attempts');
+          setFeedback(data.allPassed 
+            ? (attempts === 0 ? 'Perfect! First try!' : 'Correct, but took multiple attempts')
+            : 'Maximum attempts reached. Try a different challenge.'
+          );
           
           setTimeout(() => {
             setShowResult(false);
             setTimeout(() => {
               onComplete?.({
-                status: newStatus as 'success' | 'warning',
+                questionId: challenge.id,
+                status: newStatus as 'success' | 'warning' | 'error' | 'skipped',
                 attempts: attempts + 1,
-                timeSpent: Math.floor((Date.now() - startTime.current) / 1000)
-              });
-            }, 300);
-          }, 1500);
-        } else if (attempts >= 2) {
-          setIsSuccess(false);
-          setShowResult(true);
-          setFeedback('Maximum attempts reached. Try a different challenge.');
-          
-          setTimeout(() => {
-            setShowResult(false);
-            setTimeout(() => {
-              onComplete?.({
-                status: 'error',
-                attempts: attempts + 1,
-                timeSpent: Math.floor((Date.now() - startTime.current) / 1000)
+                timeSpent: Math.floor((Date.now() - startTime.current) / 1000),
+                code: code,
+                testResults: data.results.testResults
               });
             }, 300);
           }, 1500);
