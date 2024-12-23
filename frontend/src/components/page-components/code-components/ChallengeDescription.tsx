@@ -8,7 +8,7 @@ interface ChallengeDescriptionProps {
 const ChallengeDescription: React.FC<ChallengeDescriptionProps> = ({ challenge }) => (
     <div className="prose">
       <h3 className="text-lg font-semibold">Problem</h3>
-      <p>{challenge.description}</p>
+      <p>{challenge.description || 'No description available'}</p>
       
       <div className="mt-4">
         <h4 className="font-medium">Examples:</h4>

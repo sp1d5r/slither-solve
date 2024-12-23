@@ -82,7 +82,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className={cn(
-      "rounded-md flex flex-col md:flex-row bg-white dark:bg-neutral-950 w-full flex-1 mx-auto border border-neutral-200 dark:border-neutral-700 overflow-hidden px-1 py-1",
+      "rounded-md flex flex-col md:flex-row bg-white dark:bg-neutral-950 w-full flex-1 mx-auto border border-neutral-200 dark:border-neutral-700 overflow-hidden",
       "h-screen"
     )}>
       <Sidebar open={open} setOpen={setOpen}>
@@ -122,7 +122,7 @@ const Dashboard: React.FC = () => {
           </div>
         </SidebarBody>
       </Sidebar>
-      <main className="flex-1 p-6 overflow-auto">
+      <main className="flex-1 overflow-auto">
         <nav>
 
         </nav>

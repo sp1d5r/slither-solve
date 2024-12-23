@@ -3,6 +3,7 @@ import { Card } from '../components/shadcn/card';
 import { Button } from '../components/shadcn/button';
 import { Loader2 } from 'lucide-react';
 import { CodeChallenge } from '../components/page-components/code-components/CodeChallenge';
+import { Challenge } from 'shared';
 
 // Types for our session management
 interface TopicOption {
@@ -31,12 +32,24 @@ interface SessionProgress {
   }>;
 }
 
+// Add new interface for session challenges
+interface SessionChallenges {
+  challenges: Challenge[];
+  currentIndex: number;
+}
+
 // Mock data for initial development
 const MOCK_TOPICS: TopicOption[] = [
   {
-    id: 'python-basics',
-    name: 'Python Basics',
+    id: 'variables',
+    name: 'Variables',
     description: 'Fundamental Python concepts including variables, types, and basic operations',
+    difficulty: 'Easy'
+  },
+  {
+    id: 'if_statements',
+    name: 'If Statements',
+    description: 'Control flow using conditional statements, comparison operators, and logical operators',
     difficulty: 'Easy'
   },
   {
@@ -69,6 +82,10 @@ const SessionManager = () => {
     questionResults: []
   });
   const [loading, setLoading] = useState(false);
+  const [sessionChallenges, setSessionChallenges] = useState<SessionChallenges>({
+    challenges: [],
+    currentIndex: 0
+  });
 
   // Timer for session duration
   useEffect(() => {
@@ -108,8 +125,20 @@ const SessionManager = () => {
   const startSession = async () => {
     setLoading(true);
     try {
-      // Here we would fetch the questions for the session
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Mock API call
+      // Fetch all challenges for the session
+      const response = await fetch(`http://localhost:3001/api/challenges/topic/${sessionConfig.topic.toLowerCase()}`, {
+        method: 'GET',
+
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch session challenges');
+      const challenges = await response.json();
+      
+      setSessionChallenges({
+        challenges,
+        currentIndex: 0
+      });
+      
       setSessionProgress({
         currentQuestion: 1,
         totalQuestions: sessionConfig.questionCount,
@@ -256,9 +285,14 @@ const SessionManager = () => {
       </div>
 
       <CodeChallenge 
-        challengeId={`${sessionConfig.topic}-${sessionProgress.currentQuestion}`}
+        challenge={sessionChallenges.challenges[sessionChallenges.currentIndex]}
         onComplete={(result) => {
           handleQuestionComplete(result);
+          // Update current challenge index
+          setSessionChallenges(prev => ({
+            ...prev,
+            currentIndex: prev.currentIndex + 1
+          }));
         }}
       />
 

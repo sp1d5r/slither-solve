@@ -16,6 +16,7 @@ import { ProfileProvider } from './contexts/ProfileProvider';
 import Onboarding from './pages/Onboarding';
 import CodePage from './pages/CodePage';
 import SessionManager from './pages/SessionManager';
+import Test from './pages/Test';
 
 // Example components for different routes
 const About = () => <ScrollableLayout><h2>About Page</h2></ScrollableLayout>;
@@ -55,7 +56,9 @@ function App() {
 
                   {/* Session Manager */}
                   <Route path="/session-manager" element={<SessionManager />} />
-
+                  
+                  {/* Test Page */}
+                  <Route path="/test" element={<Test />} />
 
                   <Route path="*" element={<NotFound />} />
                 </Routes>

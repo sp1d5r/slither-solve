@@ -12,6 +12,7 @@ export interface Challenge {
     output: string;
   }>;
   hints: string[];
+  tests: TestCase[];
 }
 
 export interface TestCase {

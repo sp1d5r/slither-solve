@@ -13,47 +13,27 @@ import { Button } from '../../shadcn/button';
 
 interface CodeChallengeProps {
     onComplete?: (result: { status: 'success' | 'warning' | 'error' | 'skipped'; attempts: number; timeSpent: number }) => void;
-    challengeId: string;
-  }
+    challenge: Challenge;
+}
   
-const CodeChallenge: React.FC<CodeChallengeProps> = ({ onComplete, challengeId }) => {
-    const [code, setCode] = useState('');
+const CodeChallenge: React.FC<CodeChallengeProps> = ({ onComplete, challenge }) => {
+    const [code, setCode] = useState(challenge.boilerplate);
     const [attempts, setAttempts] = useState(0);
     const [status, setStatus] = useState('initial');
     const [feedback, setFeedback] = useState('');
     const [loading, setLoading] = useState(false);
-    const [challenge, setChallenge] = useState<Challenge | null>(null);
     const [testResults, setTestResults] = useState<TestResult[]>([]);
-    const [isLoadingChallenge, setIsLoadingChallenge] = useState(true);
     const startTime = useRef(Date.now());
-  
+    
     useEffect(() => {
-        setCode('');
+        setCode(challenge.boilerplate);
         setAttempts(0);
         setStatus('initial');
         setFeedback('');
         setTestResults([]);
-        setIsLoadingChallenge(true);
         startTime.current = Date.now();
-
-        const fetchChallenge = async () => {
-            try {
-                const response = await fetch(`http://localhost:3001/api/challenges/${challengeId}`);
-                if (!response.ok) throw new Error('Failed to fetch challenge');
-                const data = await response.json();
-                setChallenge(data);
-                setCode(data.boilerplate);
-            } catch (error) {
-                console.error('Error fetching challenge:', error);
-                setFeedback('Failed to load challenge details');
-            } finally {
-                setIsLoadingChallenge(false);
-            }
-        };
-
-        fetchChallenge();
-    }, [challengeId]);
-  
+    }, [challenge]);
+    
     const handleSubmit = async () => {
       setLoading(true);
       setAttempts(prev => prev + 1);
@@ -66,7 +46,7 @@ const CodeChallenge: React.FC<CodeChallengeProps> = ({ onComplete, challengeId }
           },
           body: JSON.stringify({
             code,
-            challengeId
+            challengeId: challenge.id
           }),
         });
   
@@ -110,22 +90,6 @@ const CodeChallenge: React.FC<CodeChallengeProps> = ({ onComplete, challengeId }
       }
     };
   
-    if (isLoadingChallenge) {
-      return (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        </div>
-      );
-    }
-  
-    if (!challenge) {
-      return (
-        <Alert variant="destructive">
-          <AlertDescription>Failed to load challenge</AlertDescription>
-        </Alert>
-      );
-    }
-  
     return (
       <Card>
         <CardHeader>
@@ -136,7 +100,7 @@ const CodeChallenge: React.FC<CodeChallengeProps> = ({ onComplete, challengeId }
             </span>
           </div>
         </CardHeader>
-        <CardContent>
+        {challenge && <CardContent>
           <div className="space-y-6">
             <ChallengeDescription challenge={challenge} />
             
@@ -155,7 +119,7 @@ const CodeChallenge: React.FC<CodeChallengeProps> = ({ onComplete, challengeId }
               <div className="flex justify-between items-center">
                 <Button 
                   onClick={handleSubmit}
-                  disabled={loading || status === 'error' || !code.trim()}
+                  disabled={loading || status === 'error'}
                 >
                   {loading ? (
                     <>
@@ -186,7 +150,7 @@ const CodeChallenge: React.FC<CodeChallengeProps> = ({ onComplete, challengeId }
               />
             </div>
           </div>
-        </CardContent>
+        </CardContent>}
       </Card>
     );
   };
