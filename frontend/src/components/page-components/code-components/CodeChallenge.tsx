@@ -81,7 +81,7 @@ const CodeChallenge: React.FC<CodeChallengeProps> = ({ onComplete, challenge }) 
       setAttempts(prev => prev + 1);
       
       try {
-        const response = await fetchWithAuth('/api/code/execute', {
+        const response = await fetchWithAuth('api/code/execute', {
           method: 'POST',
           body: JSON.stringify({
             code,
