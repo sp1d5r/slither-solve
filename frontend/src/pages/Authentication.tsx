@@ -34,7 +34,7 @@ export const Authentication: React.FC = () => {
                 setError("Passwords don't match");
                 return;
             }
-            register(email, password, name, 
+            register(email, name, password, 
                 () => navigate('/dashboard'),
                 (error) => setError(error.message)
             );

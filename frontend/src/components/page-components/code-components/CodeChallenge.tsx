@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '../../shadcn/alert';
 import { getStatusColor } from './utils';
 import { Button } from '../../shadcn/button';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useApi } from "../../../contexts/ApiContext";
 
 interface CodeChallengeProps {
     challenge: Challenge;
@@ -64,6 +65,7 @@ const CodeChallenge: React.FC<CodeChallengeProps> = ({ onComplete, challenge }) 
     const startTime = useRef(Date.now());
     const [showResult, setShowResult] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const { fetchWithAuth } = useApi();
     
     useEffect(() => {
         setCode(challenge.boilerplate);
@@ -79,11 +81,8 @@ const CodeChallenge: React.FC<CodeChallengeProps> = ({ onComplete, challenge }) 
       setAttempts(prev => prev + 1);
       
       try {
-        const response = await fetch('http://localhost:3001/api/code/execute', {
+        const response = await fetchWithAuth('/api/code/execute', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
           body: JSON.stringify({
             code,
             challengeId: challenge.id

@@ -256,7 +256,7 @@ const OnboardingFlow: React.FC = () => {
       {/* Progress bar */}
       <div className="w-full bg-gray-200 dark:bg-gray-700 h-1 fixed top-0">
         <motion.div
-          className="bg-blue-600 h-full"
+          className="bg-green-600 h-full"
           initial={{ width: 0 }}
           animate={{ width: `${((step + 1) / steps.length) * 100}%` }}
         />
@@ -272,7 +272,7 @@ const OnboardingFlow: React.FC = () => {
                 key={i}
                 className={`flex items-center justify-center w-8 h-8 rounded-full 
                   ${i === step 
-                    ? 'bg-blue-600 text-white' 
+                    ? 'bg-green-600 text-white' 
                     : i < step 
                       ? 'bg-green-500 text-white'
                       : 'bg-gray-200 dark:bg-gray-700 text-gray-400'
@@ -319,7 +319,7 @@ const OnboardingFlow: React.FC = () => {
               
               <Button
                 onClick={handleNext}
-                className="flex items-center"
+                className="flex items-center bg-green-500 hover:bg-green-600"
               >
                 {step === steps.length - 1 ? 'Complete' : 'Continue'}
                 <ChevronRight className="w-4 h-4 ml-2" />
