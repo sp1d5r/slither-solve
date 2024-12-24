@@ -13,6 +13,7 @@ import {
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthenticationProvider';
 import { useApi } from '../contexts/ApiContext';
+import { motion } from 'framer-motion';
 
 // Local state management
 interface SessionState {
@@ -240,82 +241,126 @@ const SessionManager = () => {
   };
 
   const renderConfigStage = () => (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Select a Topic</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {MOCK_TOPICS.map(topic => (
-            <Card
-              key={topic.id}
-              className={`p-4 cursor-pointer transition-colors ${
-                sessionConfig.topic === topic.id
-                  ? 'border-green-500 bg-green-50'
-                  : 'hover:bg-gray-50'
-              }`}
-              onClick={() => handleTopicSelect(topic.id)}
-            >
-              <h3 className="font-medium">{topic.name}</h3>
-              <p className="text-sm text-gray-600 mt-1">{topic.description}</p>
-              <span className="text-xs text-green-600 mt-2 inline-block">
-                {topic.difficulty}
-              </span>
-            </Card>
-          ))}
-        </div>
+    <div className="relative min-h-[100vh] w-full h-full flex items-center justify-center">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full mix-blend-multiply filter blur-xl opacity-30"
+            animate={{
+              x: [Math.random() * window.innerWidth, Math.random() * window.innerWidth],
+              y: [Math.random() * window.innerHeight, Math.random() * window.innerHeight],
+            }}
+            transition={{
+              duration: Math.random() * 10 + 10,
+              repeat: Infinity,
+              repeatType: "reverse",
+              ease: "linear"
+            }}
+            style={{
+              width: Math.random() * 400 + 100,
+              height: Math.random() * 400 + 100,
+              backgroundColor: i % 2 === 0 ? '#22c55e' : '#ec4899',
+            }}
+          />
+        ))}
       </div>
 
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Session Configuration</h2>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Number of Questions
-            </label>
-            <select
-              className="w-full rounded-md border border-gray-300 p-2"
-              value={sessionConfig.questionCount}
-              onChange={(e) => handleQuestionCountChange(Number(e.target.value))}
-            >
-              <option value={3}>3 Questions</option>
-              <option value={5}>5 Questions</option>
-              <option value={10}>10 Questions</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Difficulty
-            </label>
-            <div className="flex gap-2">
-              {['Easy', 'Medium', 'Hard'].map((diff) => (
-                <Button
-                  key={diff}
-                  className={`${sessionConfig.difficulty === diff ? 'bg-green-400 hover:bg-pink-400' : 'bg-gray-100'}`}
-                  variant={sessionConfig.difficulty === diff ? 'default' : 'outline'}
-                  onClick={() => handleDifficultyChange(diff as 'Easy' | 'Medium' | 'Hard')}
-                >
-                  {diff}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <Button
-        className="w-full bg-pink-400 hover:bg-green-400"
-        disabled={!sessionConfig.topic || loading}
-        onClick={startSession}
+      {/* Main content card */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative w-full max-w-3xl"
       >
-        {loading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Preparing Session...
-          </>
-        ) : (
-          'Start Practice Session'
-        )}
-      </Button>
+        <Card className="p-8 backdrop-blur-sm bg-white/90 shadow-xl">
+          <motion.h1 
+            className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-green-400 to-pink-400 bg-clip-text text-transparent"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            Practice Session
+          </motion.h1>
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-semibold mb-4">Select a Topic</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {MOCK_TOPICS.map(topic => (
+                  <Card
+                    key={topic.id}
+                    className={`p-4 cursor-pointer transition-colors ${
+                      sessionConfig.topic === topic.id
+                        ? 'border-green-500 bg-green-50'
+                        : 'hover:bg-gray-50'
+                    }`}
+                    onClick={() => handleTopicSelect(topic.id)}
+                  >
+                    <h3 className="font-medium">{topic.name}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{topic.description}</p>
+                    <span className="text-xs text-green-600 mt-2 inline-block">
+                      {topic.difficulty}
+                    </span>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-lg font-semibold mb-4">Session Configuration</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Number of Questions
+                  </label>
+                  <select
+                    className="w-full rounded-md border border-gray-300 p-2"
+                    value={sessionConfig.questionCount}
+                    onChange={(e) => handleQuestionCountChange(Number(e.target.value))}
+                  >
+                    <option value={3}>3 Questions</option>
+                    <option value={5}>5 Questions</option>
+                    <option value={10}>10 Questions</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Difficulty
+                  </label>
+                  <div className="flex gap-2">
+                    {['Easy', 'Medium', 'Hard'].map((diff) => (
+                      <Button
+                        key={diff}
+                        className={`${sessionConfig.difficulty === diff ? 'bg-green-400 hover:bg-pink-400' : 'bg-gray-100'}`}
+                        variant={sessionConfig.difficulty === diff ? 'default' : 'outline'}
+                        onClick={() => handleDifficultyChange(diff as 'Easy' | 'Medium' | 'Hard')}
+                      >
+                        {diff}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Button
+              className="w-full bg-pink-400 hover:bg-green-400"
+              disabled={!sessionConfig.topic || loading}
+              onClick={startSession}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Preparing Session...
+                </>
+              ) : (
+                'Start Practice Session'
+              )}
+            </Button>
+          </div>
+        </Card>
+      </motion.div>
     </div>
   );
 
@@ -350,92 +395,130 @@ const SessionManager = () => {
   );
 
   const renderSummaryStage = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-semibold">Session Complete!</h2>
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="p-4">
-          <h3 className="font-medium">Final Score</h3>
-          <p className="text-2xl font-bold text-green-600">{sessionProgress.score}</p>
-        </Card>
-        <Card className="p-4">
-          <h3 className="font-medium">Time Spent</h3>
-          <p className="text-2xl font-bold text-green-600">
-            {Math.floor(sessionProgress.timeSpent / 60)}m {sessionProgress.timeSpent % 60}s
-          </p>
-        </Card>
-      </div>
-      
-      <div>
-        <h3 className="font-medium mb-2">Question Results</h3>
-        <div className="space-y-2">
-          {sessionProgress.questionResults.map((result, index) => (
-            <div
-              key={result.questionId}
-              className={`p-3 rounded-lg ${
-                result.status === 'success'
-                  ? 'bg-green-50'
-                  : result.status === 'warning'
-                  ? 'bg-yellow-50'
-                  : 'bg-red-50'
-              }`}
-            >
-              <div className="flex justify-between">
-                <span>Question {index + 1}</span>
-                <span>{result.attempts} attempts</span>
-              </div>
-            </div>
-          ))}
-        </div>
+    <div className="relative min-h-[100vh] w-full flex items-center justify-center">
+      {/* Similar animated background as config stage */}
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full mix-blend-multiply filter blur-xl opacity-30"
+            animate={{
+              x: [Math.random() * window.innerWidth, Math.random() * window.innerWidth],
+              y: [Math.random() * window.innerHeight, Math.random() * window.innerHeight],
+            }}
+            transition={{
+              duration: Math.random() * 10 + 10,
+              repeat: Infinity,
+              repeatType: "reverse",
+              ease: "linear"
+            }}
+            style={{
+              width: Math.random() * 400 + 100,
+              height: Math.random() * 400 + 100,
+              backgroundColor: i % 2 === 0 ? '#22c55e' : '#ec4899',
+            }}
+          />
+        ))}
       </div>
 
-      <div className="flex gap-4">
-        <Button
-          variant="outline"
-          className="flex-1"
-          onClick={() => {
-            setSessionStage('config');
-            setSessionProgress({
-              currentQuestion: 0,
-              totalQuestions: 0,
-              score: 0,
-              timeSpent: 0,
-              questionResults: [],
-              topic: '',
-              masteryProgress: 0
-            });
-            setSessionState({
-              session: null,
-              currentIndex: 0
-            });
-            setSessionConfig({
-              topic: '',
-              questionCount: 5,
-              difficulty: 'Easy'
-            });
-          }}
-        >
-          New Session
-        </Button>
-        <Button
-          className="flex-1 bg-green-400"
-          onClick={() => {
-            // This would start practice mode with failed questions
-            console.log('Start practice mode');
-          }}
-        >
-          Practice Failed Questions
-        </Button>
-      </div>
+      {/* Main content card */}
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="relative w-full max-w-3xl"
+      >
+        <Card className="p-8 backdrop-blur-sm bg-white/90 shadow-xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            <h2 className="text-2xl font-semibold">Session Complete!</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="p-4">
+                <h3 className="font-medium">Final Score</h3>
+                <p className="text-2xl font-bold text-green-600">{sessionProgress.score}</p>
+              </Card>
+              <Card className="p-4">
+                <h3 className="font-medium">Time Spent</h3>
+                <p className="text-2xl font-bold text-green-600">
+                  {Math.floor(sessionProgress.timeSpent / 60)}m {sessionProgress.timeSpent % 60}s
+                </p>
+              </Card>
+            </div>
+            
+            <div>
+              <h3 className="font-medium mb-2">Question Results</h3>
+              <div className="space-y-2">
+                {sessionProgress.questionResults.map((result, index) => (
+                  <div
+                    key={result.questionId}
+                    className={`p-3 rounded-lg ${
+                      result.status === 'success'
+                        ? 'bg-green-50'
+                        : result.status === 'warning'
+                        ? 'bg-yellow-50'
+                        : 'bg-red-50'
+                    }`}
+                  >
+                    <div className="flex justify-between">
+                      <span>Question {index + 1}</span>
+                      <span>{result.attempts} attempts</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setSessionStage('config');
+                  setSessionProgress({
+                    currentQuestion: 0,
+                    totalQuestions: 0,
+                    score: 0,
+                    timeSpent: 0,
+                    questionResults: [],
+                    topic: '',
+                    masteryProgress: 0
+                  });
+                  setSessionState({
+                    session: null,
+                    currentIndex: 0
+                  });
+                  setSessionConfig({
+                    topic: '',
+                    questionCount: 5,
+                    difficulty: 'Easy'
+                  });
+                }}
+              >
+                New Session
+              </Button>
+              <Button
+                className="flex-1 bg-green-400"
+                onClick={() => {
+                  // This would start practice mode with failed questions
+                  console.log('Start practice mode');
+                }}
+              >
+                Practice Failed Questions
+              </Button>
+            </div>
+          </motion.div>
+        </Card>
+      </motion.div>
     </div>
   );
 
   return (
-    <div className="mx-auto p-4">
-      <Card className="p-6">
-        {sessionStage === 'config' && renderConfigStage()}
-        {sessionStage === 'active' && renderActiveStage()}
-        {sessionStage === 'summary' && renderSummaryStage()}
-      </Card>
+    <div className="min-h-screen w-full">
+      {sessionStage === 'config' && renderConfigStage()}
+      {sessionStage === 'active' && renderActiveStage()}
+      {sessionStage === 'summary' && renderSummaryStage()}
     </div>
   );
 };

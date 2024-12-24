@@ -14,6 +14,10 @@ const DashboardMain = () => {
   const {fetchWithAuth} = useApi();
   const {authState} = useAuth();
 
+  const startSession = (topicId: string) => {
+    navigate('/session', { state: { selectedTopic: topicId } });
+  };
+
   const topics = useMemo(() => [
     { 
       id: 'variables', 
