@@ -26,10 +26,6 @@ export default function Navbar() {
           <Link to="/" className="text-2xl font-bold text-green-600 dark:text-green-400">Slither&Solve</Link>
         </div>
         <div className="hidden md:flex space-x-4">
-          <Button variant="ghost" asChild><Link to="/" className="dark:text-gray-200">Home</Link></Button>
-          <Button variant="ghost" asChild><Link to="/articles" className="dark:text-gray-200">Articles</Link></Button>
-          <Button variant="ghost" asChild><Link to="/pricing" className="dark:text-gray-200">Pricing</Link></Button>
-          <Button variant="ghost" asChild><Link to="/contact" className="dark:text-gray-200">Contact</Link></Button>
         </div>
         {
           authState.status === AuthStatus.UNAUTHENTICATED && <div className="hidden md:flex space-x-2">

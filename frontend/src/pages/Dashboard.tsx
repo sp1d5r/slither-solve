@@ -86,7 +86,7 @@ const Dashboard: React.FC = () => {
       "h-screen"
     )}>
       <Sidebar open={open} setOpen={setOpen}>
-        <SidebarBody className="justify-between gap-10 bg-gray-100 dark:bg-gray-800 rounded-l-xl">
+        <SidebarBody className="justify-between gap-10 bg-green-100 dark:bg-gray-800 rounded-l-xl">
           <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
             {open ? <Logo /> : <LogoIcon />}
             <div className="mt-8 flex flex-col gap-2 text-gray-800 dark:text-gray-200">
@@ -133,21 +133,21 @@ const Dashboard: React.FC = () => {
 };
 
 const Logo = () => (
-    <div className="font-normal flex space-x-2 items-center text-sm text-gray-800 dark:text-gray-200 py-1 relative z-20">
-        <div className="h-5 w-6 bg-gray-800 dark:bg-gray-200 rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
+    <div className="font-normal flex space-x-2 items-center text-sm text-green-500 dark:text-gray-200 py-1 relative z-20">
+        <div className="h-5 w-6 bg-green-800 dark:bg-gray-200 rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
         <motion.span
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="font-medium whitespace-pre"
         >
-        Startup Name
+        Slither & Solve
         </motion.span>
 </div>
 );
 
 const LogoIcon = () => (
-<div className="font-normal flex space-x-2 items-center text-sm text-gray-800 dark:text-gray-200 py-1 relative z-20">
-    <div className="h-5 w-6 bg-gray-800 dark:bg-gray-200 rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
+<div className="font-normal flex space-x-2 items-center text-sm text-green-400 dark:text-gree-200 py-1 relative z-20">
+    <div className="h-5 w-6 bg-green-800 dark:bg-gray-200 rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
 </div>
 );
 

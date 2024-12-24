@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Trophy, Star, BoltIcon, Book, Code, Database, Terminal } from 'lucide-react';
+import { Star, Code, Database, Terminal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Session, SessionHistory, SessionHistoryResponse } from 'shared/src/types/CodeEditor';
+import { SessionHistoryResponse } from 'shared/src/types/CodeEditor';
 import { TopicProgress } from 'shared/src/types/CodeEditor';
 import { useApi } from '../../../contexts/ApiContext';
 import { useAuth } from '../../../contexts/AuthenticationProvider';

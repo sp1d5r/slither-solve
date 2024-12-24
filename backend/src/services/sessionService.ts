@@ -90,7 +90,6 @@ export class SessionService {
         [],
         [{ field: 'timestamp', direction: 'desc' }],
         (sessions) => {
-          console.log("sessions", sessions);
           const start = (page - 1) * limit;
           const paginatedSessions = sessions.slice(start, start + limit);
           resolve({

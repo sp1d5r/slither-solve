@@ -4,6 +4,8 @@ import { BackgroundBeamsWithCollision } from "../components/aceturnity/backgroun
 import { Button } from "../components/shadcn/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/shadcn/card";
 import { Badge } from "../components/shadcn/badge";
+import LandingImage1 from "../assets/output-4.jpg";
+import LandingImage2 from "../assets/output-3.jpg";
 
 export const Landing: React.FC = () => {
   return (
@@ -33,7 +35,8 @@ export const Landing: React.FC = () => {
             <div className="mt-12 flex items-center justify-center dark:text-white">
               <div className="ml-4 flex flex-col justify-center items-center">
                 <span className="text-yellow-400">★★★★★</span>
-                <span>From me, the creator...</span>
+                <span>Created by an Imperial College London graduate</span>
+                <span className="text-sm text-gray-500">Former Engineer at Arm & Palantir</span>
               </div>
             </div>
           </div>
@@ -96,39 +99,41 @@ export const Landing: React.FC = () => {
       <div className="flex flex-col md:flex-row max-w-6xl mx-auto my-16 px-4">
         <div className="w-full md:w-1/2 mb-8 md:mb-0">
             <img 
-                src="https://placehold.co/400" 
-                alt="Description of the thing" 
-                className="w-full aspect-sqaure h-auto object-cover rounded-lg shadow-lg"
+                src={LandingImage1}
+                alt="Spaced Repetition Learning" 
+                className="w-full aspect-square h-auto object-cover rounded-lg shadow-lg"
             />
         </div>
         <div className="w-full md:w-1/2 md:pl-8 flex flex-col justify-center dark:text-white">
-            <p className="font-bold text-green-500">FEATURE INFORMATION HERE</p>
-            <h2 className="text-3xl font-bold mb-4">Your Headline Here</h2>
+            <p className="font-bold text-green-500">PROVEN LEARNING METHOD</p>
+            <h2 className="text-3xl font-bold mb-4">Master Python Through Spaced Repetition</h2>
             <p className="text-lg mb-6">
-            Your description text goes here. Explain the key features or benefits 
-            related to the image on the left. Make it compelling and informative.
+            Learn Python effectively using scientifically-proven spaced repetition techniques. 
+            Break down complex programming concepts into manageable, bite-sized pieces that stick in your memory.
+            Perfect for beginners starting their coding journey.
             <br/>
-            <Button className="bg-green-500 hover:bg-green-600 text-white">Call to Action</Button>
+            <Button className="bg-green-500 hover:bg-green-600 text-white mt-4">Start Learning</Button>
             </p>
         </div>
       </div>
 
       <div className="flex flex-col md:flex-row max-w-6xl mx-auto my-16 px-4 dark:text-white">
         <div className="w-full md:w-1/2 md:pl-8 flex flex-col justify-center">
-            <p className="font-bold text-green-500">FEATURE INFORMATION HERE</p>
-            <h2 className="text-3xl font-bold mb-4">Your Headline Here</h2>
+            <p className="font-bold text-green-500">INDUSTRY EXPERTISE</p>
+            <h2 className="text-3xl font-bold mb-4">Learn from Big Tech Experience</h2>
             <p className="text-lg mb-6">
-            Your description text goes here. Explain the key features or benefits 
-            related to the image on the left. Make it compelling and informative.
+            Benefit from curriculum designed by someone who's worked at leading tech companies 
+            like Arm and Palantir, with offers from Apple and Improbable. Get insider knowledge 
+            on what it takes to succeed in tech.
             <br/>
-            <Button className="bg-green-500 hover:bg-green-600 text-white">Call to Action</Button>
+            <Button className="bg-green-500 hover:bg-green-600 text-white mt-4">View Curriculum</Button>
             </p>
         </div>
         <div className="w-full md:w-1/2 mb-8 md:mb-0">
             <img 
-                src="https://placehold.co/400" 
-                alt="Description of the thing" 
-                className="w-full aspect-sqaure h-auto object-cover rounded-lg shadow-lg"
+                src={LandingImage2}
+                alt="Tech Industry Experience" 
+                className="w-full aspect-square h-auto object-cover rounded-lg shadow-lg"
             />
         </div>
       </div>
@@ -137,14 +142,14 @@ export const Landing: React.FC = () => {
         <div className="absolute w-[100vw] min-h-[20vh] bg-gray-800 flex flex-col justify-center items-center">
             <h1 className="relative text-4xl font-bold m-0">
                 <div className="absolute left-0 top-[1px] bg-clip-text bg-no-repeat text-transparent bg-gradient-to-r py-2 from-pink-500 via-green-400 to-green-500 [text-shadow:0_0_rgba(0,0,0,0.1)]">
-                    <span className="">Start coding today</span>
+                    Begin Your Python Journey
                 </div>
                 <div className="relative bg-clip-text text-transparent bg-no-repeat bg-gradient-to-r from-pink-400 via-green-400 to-green-500 py-2">
-                    <span className="">Start coding today</span>
+                    Begin Your Python Journey
                 </div>
             </h1>
-            <p className="text-white mb-1">Join thousands of Python learners</p>
-            <Button variant="secondary" className="bg-pink-500 hover:bg-pink-600 text-white">Get started</Button>
+            <p className="text-white mb-1">Learn Python from industry professionals</p>
+            <Button variant="secondary" className="bg-pink-500 hover:bg-pink-600 text-white">Start Free Trial</Button>
         </div>
       </div>
       </div>
