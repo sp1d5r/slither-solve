@@ -11,7 +11,7 @@ export const createSession = async (req: Request, res: Response): Promise<void> 
   try {
     const sessionConfig: SessionConfig = req.body;
     const userId = req.user?.uid; // Will come from auth middleware
-    
+
     if (!userId) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -128,6 +128,8 @@ export const getSessionHistory = async (req: Request, res: Response): Promise<vo
     const userId = req.user?.uid; // Will come from auth middleware
     const { page = 1, limit = 10 } = req.query;
 
+    console.log("userId", userId);
+
     if (!userId) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -210,6 +212,25 @@ export const getProblemHistory = async (req: Request, res: Response): Promise<vo
     res.json(history);
   } catch (error) {
     console.error('Error fetching problem history:', error);
+    res.status(500).json({ 
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    });
+  }
+};
+
+export const getActivityHeatmap = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.uid;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const heatmapData = await sessionService.getUserActivityHeatmap(userId);
+    res.json(heatmapData);
+  } catch (error) {
+    console.error('Error fetching activity heatmap:', error);
     res.status(500).json({ 
       error: error instanceof Error ? error.message : 'Unknown error occurred'
     });

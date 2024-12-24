@@ -148,6 +148,13 @@ const SessionManager = () => {
       });
       
       const sessionData: Session = await response.json();
+
+      setSessionConfig({
+        ...sessionConfig,
+        questionCount: sessionData.challenges.length,
+      });
+
+      console.log("sessionData", sessionData);
       
       // Debug: Log the response
       console.log('Session created:', sessionData);
@@ -333,10 +340,10 @@ const SessionManager = () => {
       </div>
 
       <div className="flex-1">
-        <CodeChallenge 
+        {sessionState.session?.challenges[sessionState.currentIndex] && <CodeChallenge 
           challenge={sessionState.session?.challenges[sessionState.currentIndex]}
           onComplete={handleQuestionComplete}
-        />
+        />}
       </div>
     </div>
     )

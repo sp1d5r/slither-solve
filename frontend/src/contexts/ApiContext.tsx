@@ -20,7 +20,6 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (authState.user) {
       const token = await FirebaseAuthService.getToken();
-      console.log('Token:', token);
       if (!token) {
         throw new Error('No auth token available');
       }

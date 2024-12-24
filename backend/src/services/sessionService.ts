@@ -1,4 +1,4 @@
-import { Session, SessionConfig, QuestionResult, FirebaseDatabaseService, Challenge, TopicProgress, ProblemProgress, ProblemAttempt, SessionHistoryResponse, ProblemHistoryResponse, SessionHistory } from 'shared';
+import { Session, SessionConfig, QuestionResult, FirebaseDatabaseService, Challenge, TopicProgress, ProblemProgress, ProblemAttempt, SessionHistoryResponse, ProblemHistoryResponse, SessionHistory, ActivityHeatmapResponse, DailyActivityStats, TopicProblemResult } from 'shared';
 import { ChallengeService } from './challengeService';
 
 const SESSIONS_COLLECTION = 'sessions';
@@ -15,9 +15,8 @@ export class SessionService {
 
   async createSession(config: SessionConfig, userId: string): Promise<Session> {
     const challenges = await this.challengeService.getChallengesByTopic(config.topic);
-    
+
     const selectedChallenges = challenges
-      .filter(c => c.difficulty === config.difficulty)
       .sort(() => Math.random() - 0.5)
       .slice(0, config.questionCount);
 
@@ -86,14 +85,12 @@ export class SessionService {
     limit: number = 10
   ): Promise<SessionHistoryResponse> {
     return new Promise((resolve) => {
-      FirebaseDatabaseService.complexQuery<Session>(
-        SESSIONS_COLLECTION,
-        [
-          { field: 'userId', operator: '==', value: userId },
-          { field: 'status', operator: '==', value: 'completed' }
-        ],
-        [{ field: 'startTime', direction: 'desc' }],
+      FirebaseDatabaseService.complexQuery<SessionHistory>(
+        `${SESSIONS_COLLECTION}/${userId}/history`,
+        [],
+        [{ field: 'timestamp', direction: 'desc' }],
         (sessions) => {
+          console.log("sessions", sessions);
           const start = (page - 1) * limit;
           const paginatedSessions = sessions.slice(start, start + limit);
           resolve({
@@ -109,15 +106,29 @@ export class SessionService {
     });
   }
 
-  async getTopicProgress(userId: string, topic: string): Promise<TopicProgress | null> {
+  async getTopicProgress(userId: string, topic: string): Promise<TopicProgress> {
     return new Promise((resolve) => {
       FirebaseDatabaseService.getDocument<TopicProgress>(
-        TOPIC_PROGRESS_COLLECTION,
-        `${userId}_${topic}`,
-        (progress) => resolve(progress),
+        `${TOPIC_PROGRESS_COLLECTION}/${userId}/topics`,
+        topic,
+        (progress) => resolve(progress || {
+          totalAttempts: 0,
+          successfulAttempts: 0,
+          lastAttempted: '',
+          averageTime: 0,
+          masteryLevel: 0,
+          problemResults: {}
+        }),
         (error) => {
           console.error('Error fetching topic progress:', error);
-          resolve(null);
+          resolve({
+            totalAttempts: 0,
+            successfulAttempts: 0,
+            lastAttempted: '',
+            averageTime: 0,
+            masteryLevel: 0,
+            problemResults: {}
+          });
         }
       );
     });
@@ -131,11 +142,8 @@ export class SessionService {
   ): Promise<ProblemHistoryResponse> {
     return new Promise((resolve) => {
       FirebaseDatabaseService.complexQuery<ProblemAttempt>(
-        PROBLEM_HISTORY_COLLECTION,
-        [
-          { field: 'userId', operator: '==', value: userId },
-          { field: 'problemId', operator: '==', value: problemId }
-        ],
+        `${PROBLEM_HISTORY_COLLECTION}/${userId}/attempts`,
+        [{ field: 'problemId', operator: '==', value: problemId }],
         [{ field: 'timestamp', direction: 'desc' }],
         (attempts) => {
           const start = (page - 1) * limit;
@@ -156,21 +164,47 @@ export class SessionService {
   private async updateTopicProgress(
     userId: string,
     topic: string,
-    result: QuestionResult
+    result: QuestionResult,
+    challengeId: string
   ): Promise<void> {
     return new Promise((resolve) => {
       FirebaseDatabaseService.getDocument<TopicProgress>(
         `${TOPIC_PROGRESS_COLLECTION}/${userId}/topics`,
         topic,
         async (existingProgress) => {
+          const now = new Date().toISOString();
+          
+          const nextReviewDate = this.calculateNextReviewDate(
+            result.status,
+            result.attempts,
+            existingProgress?.problemResults?.[challengeId]
+          );
+
+          // Calculate mastery by counting unique successful problems
+          const updatedProblemResults = {
+            ...(existingProgress?.problemResults || {}),
+            [challengeId]: {
+              problemId: challengeId,
+              lastAttempted: now,
+              status: result.status,
+              attempts: result.attempts,
+              nextReviewDate
+            }
+          };
+
+          // Count problems that have been successfully completed at least once
+          const masteryLevel = Object.values(updatedProblemResults)
+            .filter(result => result.status === 'success').length;
+
           const newProgress = {
             totalAttempts: (existingProgress?.totalAttempts || 0) + 1,
             successfulAttempts: (existingProgress?.successfulAttempts || 0) + (result.status === 'success' ? 1 : 0),
-            lastAttempted: new Date().toISOString(),
+            lastAttempted: now,
             averageTime: existingProgress
               ? (existingProgress.averageTime * existingProgress.totalAttempts + result.timeSpent) / (existingProgress.totalAttempts + 1)
               : result.timeSpent,
-            masteryLevel: 0 // Calculate based on your criteria
+            masteryLevel,
+            problemResults: updatedProblemResults
           };
 
           await FirebaseDatabaseService.updateDocument(
@@ -186,6 +220,36 @@ export class SessionService {
         }
       );
     });
+  }
+
+  private calculateNextReviewDate(
+    status: QuestionResult['status'],
+    attempts: number,
+    previousResult?: TopicProblemResult,
+  ): string {
+    const now = new Date();
+    
+    // If failed or skipped, review tomorrow
+    if (status === 'error' || status === 'skipped') {
+      now.setDate(now.getDate() + 1);
+      return now.toISOString();
+    }
+
+    // Base interval on performance
+    let interval = 1;
+    if (status === 'success' && attempts === 1) {
+      // Perfect solution - longer interval
+      interval = previousResult ? 14 : 7; // 2 weeks if repeated success, 1 week for first success
+    } else if (status === 'success') {
+      // Succeeded but took multiple attempts
+      interval = previousResult ? 7 : 3; // 1 week if repeated success, 3 days for first success
+    } else if (status === 'warning') {
+      // Barely passed - shorter interval
+      interval = 2; // Review in 2 days
+    }
+
+    now.setDate(now.getDate() + interval);
+    return now.toISOString();
   }
 
   private async updateUserProgress(
@@ -318,10 +382,77 @@ export class SessionService {
     await Promise.all([
       this.updateUserProgress(userId, currentChallenge.id, result),
       this.logSessionHistory(userId, sessionId, currentChallenge, result),
-      this.updateTopicProgress(userId, currentChallenge.topic, result),
+      this.updateTopicProgress(userId, currentChallenge.topic, result, currentChallenge.id),
       this.logProblemAttempt(userId, currentChallenge.id, result)
     ]);
 
     return updatedSession;
+  }
+
+  async getUserActivityHeatmap(userId: string): Promise<ActivityHeatmapResponse> {
+    return new Promise((resolve) => {
+      FirebaseDatabaseService.complexQuery<ProblemAttempt>(
+        `${PROBLEM_HISTORY_COLLECTION}/${userId}/attempts`,
+        [], // No filters, we want all attempts
+        [{ field: 'timestamp', direction: 'asc' }],
+        (attempts) => {
+          const dailyActivity: { [date: string]: DailyActivityStats } = {};
+          const overallStatusBreakdown = {
+            success: 0,
+            error: 0,
+            warning: 0
+          };
+          let totalTimeSpent = 0;
+
+          // Process each attempt
+          attempts.forEach(attempt => {
+            // Convert timestamp to YYYY-MM-DD
+            const date = new Date(attempt.timestamp).toISOString().split('T')[0];
+            
+            // Initialize daily stats if needed
+            if (!dailyActivity[date]) {
+              dailyActivity[date] = {
+                totalAttempts: 0,
+                totalTimeSpent: 0,
+                statusBreakdown: {
+                  success: 0,
+                  error: 0,
+                  warning: 0
+                }
+              };
+            }
+
+            // Update daily stats
+            dailyActivity[date].totalAttempts++;
+            dailyActivity[date].totalTimeSpent += attempt.timeSpent;
+            dailyActivity[date].statusBreakdown[attempt.status]++;
+
+            // Update overall stats
+            overallStatusBreakdown[attempt.status]++;
+            totalTimeSpent += attempt.timeSpent;
+          });
+
+          resolve({
+            dailyActivity,
+            totalProblems: attempts.length,
+            totalTimeSpent,
+            overallStatusBreakdown
+          });
+        },
+        (error) => {
+          console.error('Error fetching activity heatmap data:', error);
+          resolve({
+            dailyActivity: {},
+            totalProblems: 0,
+            totalTimeSpent: 0,
+            overallStatusBreakdown: {
+              success: 0,
+              error: 0,
+              warning: 0
+            }
+          });
+        }
+      );
+    });
   }
 }

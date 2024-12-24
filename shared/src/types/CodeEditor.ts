@@ -91,14 +91,20 @@ export interface TopicOption {
   difficulty: Difficulty;
 }
 
+export interface TopicProblemResult {
+  problemId: string;
+  lastAttempted: string;
+  status: "success" | "warning" | "error" | "skipped";
+  nextReviewDate?: string;  // For spaced repetition scheduling
+}
+
 export interface TopicProgress {
-  userId: string;
-  topic: string;
   totalAttempts: number;
   successfulAttempts: number;
   lastAttempted: string;
   averageTime: number;
   masteryLevel: number;
+  problemResults: { [problemId: string]: TopicProblemResult };
 }
 
 export interface ProblemProgress {
@@ -123,7 +129,7 @@ export interface ProblemAttempt extends Identifiable {
 }
 
 export interface SessionHistoryResponse {
-  sessions: Session[];
+  sessions: SessionHistory[];
   total: number;
 }
 
@@ -148,4 +154,26 @@ export interface SessionHistory extends Identifiable {
   timestamp: string;
   topicStudied: string;
   problemsAttempted: SessionAttempt[];
+}
+
+export interface DailyActivityStats {
+  totalAttempts: number;
+  totalTimeSpent: number;
+  statusBreakdown: {
+    success: number;
+    error: number;
+    warning: number;
+  };
+}
+
+export interface ActivityHeatmapResponse {
+  // Key is date in ISO format (YYYY-MM-DD)
+  dailyActivity: { [date: string]: DailyActivityStats };
+  totalProblems: number;
+  totalTimeSpent: number;
+  overallStatusBreakdown: {
+    success: number;
+    error: number;
+    warning: number;
+  };
 }
