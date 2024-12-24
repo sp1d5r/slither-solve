@@ -10,5 +10,3 @@ export interface AuthService {
     getToken(): Promise<string | null>;
     refreshToken(): Promise<string | null>;
   }
-
-export default AuthService;

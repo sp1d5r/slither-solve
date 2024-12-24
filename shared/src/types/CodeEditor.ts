@@ -18,8 +18,8 @@ export interface Challenge {
 }
 
 export interface TestCase {
-  input: any[];
-  expected: any;
+  input: any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+  expected: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 export interface TestResult {

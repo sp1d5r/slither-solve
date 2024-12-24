@@ -127,7 +127,7 @@ export const Authentication: React.FC = () => {
                 </Label>
               </div>
             )}
-            <Button type="submit" className="w-full dark:text-white">
+            <Button type="submit" className="w-full dark:text-white bg-green-500 hover:bg-green-600">
               {mode === 'sign-up' ? 'Sign Up' : 'Login'}
             </Button>
             {error && <p className="text-red-500 text-sm">{error}</p>}
@@ -149,10 +149,10 @@ export const Authentication: React.FC = () => {
           </div>
         </form>
       </div>
-          <div className="relative hidden bg-red-500 lg:block">
-            <BackgroundLines className="flex items-center justify-center w-full flex-col px-4 bg-muted">
+          <div className="relative hidden bg-pink-500 lg:block">
+            <BackgroundLines className="flex items-center justify-center w-full flex-col px-4 bg-pink-300">
               <h2 className="max-w-2xl bg-clip-text text-transparent text-center bg-gradient-to-b from-neutral-900 to-neutral-700 dark:from-neutral-100 dark:to-white text-2xl md:text-4xl lg:text-7xl font-sans py-2 md:py-10 relative z-20 font-bold tracking-tight">
-                Your journey begins here
+                Learn Python today
               </h2>
               <p className="max-w-xl mx-auto text-sm md:text-lg text-neutral-700 dark:text-neutral-300 text-center">
                 {mode === 'sign-up' 

@@ -11,7 +11,7 @@ import {
   GoogleAuthProvider,
   Auth,
 } from 'firebase/auth';
-import AuthService from '../AuthenticationInterface';
+import {AuthService} from '../AuthenticationInterface';
 import { getFirebaseApp } from '../../../config/firebaseConfig';
 import { User } from '../../../types/User';
 
