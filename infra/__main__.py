@@ -21,6 +21,6 @@ service = LambdaService(
     image_tag=os.getenv('IMAGE_TAG', 'latest')
 )
 
-# Export the URLs
+# Export the URLsc
 pulumi.export("api_url", service.get_url())
 pulumi.export("ecr_repository_url", service.get_ecr_repository_url())
