@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { initializeFirebase } from 'shared/src/config/firebaseConfig';
+import { initializeFirebase } from 'shared';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -65,6 +65,5 @@ app.use('/api/admin', adminRoutes);
 app.listen(port, () => {
   console.log(`Backend server running at http://localhost:${port}`);
 });
-
 
 export const handler = serverless(app);
