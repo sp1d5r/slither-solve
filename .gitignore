@@ -34,3 +34,12 @@
 
 
 node_modules
+
+# Build files
+*/dist/*
+*/build/*
+/frontend/build
+/backend/dist
+/shared/dist
+.build/
+dist/
